@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>股市心理博弈 · 交互 Demo｜Selden 市场心理学</title>
+<style>
+  :root{
+    --bg:#0d0f14; --panel:#151921; --panel2:#1b2029; --line:#2a313d;
+    --acc:#e8c87a; --acc-dim:#a8915a; --txt:#e6e8ec; --muted:#8a909c;
+    --up:#ff4d4f; --down:#52c41a; --warn:#faad14; --info:#5aa9e8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.6;padding:0 0 60px}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+  /* Hero */
+  .hero{padding:54px 0 30px;border-bottom:1px solid var(--line);background:radial-gradient(1200px 400px at 70% -10%,rgba(232,200,122,.10),transparent)}
+  .hero h1{font-size:34px;letter-spacing:1px;color:var(--acc);font-weight:700}
+  .hero .sub{color:var(--muted);margin-top:8px;font-size:15px}
+  .hero .src{margin-top:14px;font-size:13px;color:var(--acc-dim)}
+  .tag{display:inline-block;border:1px solid var(--acc-dim);color:var(--acc);border-radius:20px;padding:2px 12px;font-size:12px;margin-right:8px}
+  /* Section */
+  section{padding:40px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:22px;color:var(--acc);margin-bottom:6px}
+  .lead{color:var(--muted);font-size:14px;margin-bottom:22px}
+  /* 8 chapters */
+  .chapters{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .ch{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:14px;cursor:pointer;transition:.2s}
+  .ch:hover{border-color:var(--acc-dim);transform:translateY(-2px)}
+  .ch .n{color:var(--acc);font-size:13px;font-weight:700}
+  .ch .t{font-size:14px;margin-top:4px}
+  .ch .d{color:var(--muted);font-size:12px;margin-top:6px;line-height:1.5}
+  /* Cycle timeline */
+  .cycle{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .stage{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:14px;cursor:pointer;position:relative;transition:.2s}
+  .stage:hover{border-color:var(--acc-dim)}
+  .stage.active{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+  .stage .idx{position:absolute;top:10px;right:12px;color:var(--acc-dim);font-size:12px}
+  .stage .nm{font-size:14px;font-weight:600;padding-right:24px}
+  .stage .tip{color:var(--muted);font-size:12px;margin-top:6px}
+  .detail{border:1px solid var(--acc-dim);background:var(--panel2);border-radius:12px;padding:20px;margin-top:16px;min-height:120px}
+  .detail h3{color:var(--acc);font-size:17px;margin-bottom:8px}
+  .detail .body{font-size:14px;color:var(--txt)}
+  .detail .a{margin-top:12px;font-size:13px;color:var(--info);border-left:3px solid var(--info);padding-left:12px}
+  /* Self-check */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .ctrl{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:16px}
+  .ctrl label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px}
+  .opts{display:flex;flex-wrap:wrap;gap:8px}
+  .opt{border:1px solid var(--line);background:var(--panel2);color:var(--txt);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px;transition:.15s}
+  .opt:hover{border-color:var(--acc-dim)}
+  .opt.on{background:var(--acc);color:#1a1407;border-color:var(--acc);font-weight:600}
+  .readout{border:1px solid var(--acc-dim);background:var(--panel2);border-radius:12px;padding:20px;margin-top:16px}
+  .readout .badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:12px}
+  .readout .line{font-size:14px;margin:8px 0}
+  .readout .quote{color:var(--acc);font-size:15px;margin-top:14px;border-left:3px solid var(--acc);padding-left:12px}
+  /* News matrix */
+  .matrix{display:grid;grid-template-columns:120px repeat(3,1fr);gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .matrix>div{padding:12px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:13px}
+  .matrix .hd{background:var(--panel2);color:var(--acc);font-weight:600}
+  .matrix .rh{background:var(--panel2);color:var(--muted);font-weight:600}
+  .matrix .cell{cursor:pointer;transition:.15s}
+  .matrix .cell:hover{background:rgba(232,200,122,.06)}
+  .matrix .cell .mini{color:var(--muted);font-size:11px;margin-top:4px}
+  .matrix .cell.show{background:rgba(232,200,122,.10)}
+  .cell.up .big{color:var(--up)} .cell.down .big{color:var(--down)} .cell.mid .big{color:var(--acc)}
+  /* Doctrines */
+  .docs{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .doc{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:16px}
+  .doc .no{color:var(--acc);font-weight:700;font-size:14px}
+  .doc .t{font-size:14px;margin:6px 0}
+  .doc .x{color:var(--muted);font-size:13px}
+  .foot{color:var(--muted);font-size:12px;text-align:center;padding-top:30px}
+  @media(max-width:760px){.chapters,.cycle,.docs{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.matrix{grid-template-columns:80px repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="wrap">
+    <h1>股市心理博弈</h1>
+    <div class="sub">Selden《Psychology of the Stock Market》(1912) · 市场心理实战蒸馏 · 黑金交互 Demo</div>
+    <div class="src"><span class="tag">公版书</span><span class="tag">8 章</span><span class="tag">40+ 知识卡</span> 蒸馏自 G.C. Selden 原著，A股 实战向改写。本 Demo 只给心理框架，不荐股、不预测点位。</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- 章节地图 -->
+  <section>
+    <h2>一、八章地图</h2>
+    <div class="lead">点开任意一章，回到知识库对应段落。先建立全局坐标系，再进下面的交互。</div>
+    <div class="chapters">
+      <div class="ch"><div class="n">第一章</div><div class="t">投机周期</div><div class="d">沉寂→吸筹→回补→追高→派发→崩塌</div></div>
+      <div class="ch"><div class="n">第二章</div><div class="t">逆向推理</div><div class="d">舆论按美元计量；高价利好要疑</div></div>
+      <div class="ch"><div class="n">第三章</div><div class="t">「他们」</div><div class="d">控盘迷思的三层真实含义</div></div>
+      <div class="ch"><div class="n">第四章</div><div class="t">贴现</div><div class="d">交易过去 vs 交易预期</div></div>
+      <div class="ch"><div class="n">第五章</div><div class="t">个人 vs 全局</div><div class="d">持仓即偏见；遗忘自己的仓位</div></div>
+      <div class="ch"><div class="n">第六章</div><div class="t">恐慌与狂热</div><div class="d">流动性枯竭；虚假财富幻觉</div></div>
+      <div class="ch"><div class="n">第七章</div><div class="t">阶梯单</div><div class="d">支撑/压力来自群众，非庄家</div></div>
+      <div class="ch"><div class="n">第八章</div><div class="t">个人心智</div><div class="d">清明>热情；五条实战戒律</div></div>
+    </div>
+  </section>
+
+  <!-- 投机周期 -->
+  <section>
+    <h2>二、投机周期 · 你在这段的哪一格？</h2>
+    <div class="lead">点击阶段查看解读 + A股 实战含义。周期嵌套：大周期含中周期，中周期含小周期。</div>
+    <div class="cycle" id="cycle"></div>
+    <div class="detail" id="cycleDetail">
+      <h3>选一个阶段 →</h3>
+      <div class="body">从「沉寂低量」到「崩塌式下跌」，每一格对应不同的群体心理与操作应对。</div>
+    </div>
+  </section>
+
+  <!-- 心智自检 -->
+  <section>
+    <h2>三、心智自检 · 你现在被偏见带偏了吗？</h2>
+    <div class="lead">选自第五章/第八章。照实选，工具会照出你的「仓位偏见镜」。</div>
+    <div class="grid2">
+      <div class="ctrl">
+        <label>① 你当前的市场立场</label>
+        <div class="opts" id="posOpts">
+          <div class="opt" data-v="long">多头（持仓待涨）</div>
+          <div class="opt" data-v="short">空头（持币/做空）</div>
+          <div class="opt" data-v="flat">空仓观望</div>
+        </div>
+      </div>
+      <div class="ctrl">
+        <label>② 看到盘面时你的情绪</label>
+        <div class="opts" id="emoOpts">
+          <div class="opt" data-v="exc">兴奋/非买不可</div>
+          <div class="opt" data-v="calm">平静</div>
+          <div class="opt" data-v="fear">恐惧/想割</div>
+          <div class="opt" data-v="regret">懊恼/想回本</div>
+        </div>
+      </div>
+    </div>
+    <div class="readout" id="readout">
+      <div class="badge" style="background:var(--panel2);color:var(--muted)">待检测</div>
+      <div class="line">选完上面两项，这里会给出你的偏见警示与一句操作提醒。</div>
+    </div>
+  </section>
+
+  <!-- 新闻逆向推理 -->
+  <section>
+    <h2>四、新闻逆向推理 · 看价格位置，别只看消息方向</h2>
+    <div class="lead">选自第二章/第四章。点格子看含义。核心戒律：高价利好要疑，低价利空要疑。</div>
+    <div class="matrix" id="matrix">
+      <div class="hd"></div><div class="hd">利好消息</div><div class="hd">利空消息</div><div class="hd">中性/模糊</div>
+      <div class="rh">高价区</div>
+      <div class="cell up" data-k="high_good"><div class="big">疑为派发</div><div class="mini">利好或不涨反跌，警惕出货</div></div>
+      <div class="cell down" data-k="high_bad"><div class="big">借机洗盘？</div><div class="mini">高位利空若跌不动，反而强</div></div>
+      <div class="cell mid" data-k="high_neu"><div class="big">情绪过热</div><div class="mini">一致看多=温度接近顶</div></div>
+      <div class="rh">中段</div>
+      <div class="cell mid" data-k="mid_good"><div class="big">顺势验证</div><div class="mini">利好助推趋势，可跟随</div></div>
+      <div class="cell mid" data-k="mid_bad"><div class="big">顺势验证</div><div class="mini">利空压制趋势，别硬接</div></div>
+      <div class="cell mid" data-k="mid_neu"><div class="big">看资金</div><div class="mini">无消息看量能与多空结构</div></div>
+      <div class="rh">低价区</div>
+      <div class="cell up" data-k="low_good"><div class="big">或已贴现</div><div class="mini">低位利好不涨，可能早消化</div></div>
+      <div class="cell down" data-k="low_bad"><div class="big">疑为吸筹</div><div class="mini">利空不跌，警惕底部造假恐慌</div></div>
+      <div class="cell mid" data-k="low_neu"><div class="big">情绪冰点</div><div class="mini">一致看空=温度接近底</div></div>
+    </div>
+    <div class="detail" id="newsDetail" style="margin-top:16px">
+      <h3>点上方任意格子 →</h3>
+      <div class="body">同一则消息，出现在高价区、中段、低价区，含义可能完全相反。位置 > 方向。</div>
+    </div>
+  </section>
+
+  <!-- 五条戒律 -->
+  <section>
+    <h2>五、五条实战戒律（全书总结）</h2>
+    <div class="lead">选自第八章。打印贴屏幕也行。</div>
+    <div class="docs" id="docs"></div>
+  </section>
+
+  <div class="foot">股市心理博弈 · Selden 市场心理学 skill · 黑金交互 Demo · 仅作心理框架参考，不构成投资建议</div>
+</div>
+
+<script>
+/* ---- 投机周期数据 ---- */
+const cycle = [
+  {idx:"01",nm:"沉寂低量",tip:"无人注意，缓慢吸筹",body:"价格几乎不动、公众兴趣极低。大资金在无人注意时悄悄 Accumulate。心理特征：绝望与遗忘。",a:"A股实战：地量+长期横盘，往往是下一轮周期的起点，而非「没戏了」。别在沉默时离场。"},
+  {idx:"02",nm:"缓慢抬升",tip:"空头回补，少数人先知",body:"价格不声不响走高，胆小空头开始回补。大众仍不信，等着「像样的回调」却等不到。",a:"A股实战：突破后不回踩的慢涨最磨人，也最真。等「舒服的买点」常常等丢主升。"},
+  {idx:"03",nm:"加速上涨",tip:"顽固空头平仓",body:"市场「沸腾」，空头神经崩溃、市价平仓。公众才开始相信「闭眼买」。",a:"A股实战：标志性大阳+空头回补，是情绪从怀疑转确信的拐点，但也是后半段。"},
+  {idx:"04",nm:"公众追高",tip:"「强得不会跌」",body:"外围公众得出结论：市场太强，只能「随便买」。又一波买盘把价格推到新高。",a:"A股实战：当群里/短视频都在晒收益、新股民开户激增，你已在周期中后段。"},
+  {idx:"05",nm:"派发震荡",tip:"大 holder 悄悄卖",body:"价格混乱、涨不动。最大持有者找到足够大的市场，开始派发。表面「健康回调」，实则出货。",a:"A股实战：高位放量滞涨、上影线变多，是派发信号，不是「洗盘完毕继续飞」。"},
+  {idx:"06",nm:"急跌初现",tip:"「健康回调」陷阱",body:"市场猛地一沉，被欢呼为「健康回调」。其实派发已完成，第一滴血已流。",a:"A股实战：创新高后的首次快速大阴，先当风险，别先入为主当黄金坑。"},
+  {idx:"07",nm:"崩塌下跌",tip:"跌速快于涨速",body:"浮动供给滚雪球，弱手多、承接少。下跌比上涨更陡，直到投资者/大资金重新入场。",a:"A股实战：雪崩段不接飞刀；等流动性拐点（两融出清、放量企稳）再谈。"},
+  {idx:"08",nm:" lethargy 回归",tip:"回到起点",body:"价格陷入 lethargy，从这一刻起，下一个周期又开始酝酿。",a:"A股实战：一轮结束=下一轮种子。真正的机会在无人聊股时埋下。"}
+];
+const cycleEl=document.getElementById('cycle');
+cycle.forEach((s,i)=>{
+  const d=document.createElement('div');d.className='stage';d.innerHTML=`<div class="idx">${s.idx}</div><div class="nm">${s.nm}</div><div class="tip">${s.tip}</div>`;
+  d.onclick=()=>{document.querySelectorAll('.stage').forEach(x=>x.classList.remove('active'));d.classList.add('active');
+    document.getElementById('cycleDetail').innerHTML=`<h3>${s.idx} · ${s.nm}</h3><div class="body">${s.body}</div><div class="a">${s.a}</div>`;};
+  cycleEl.appendChild(d);
+});
+
+/* ---- 心智自检 ---- */
+let pos=null,emo=null;
+function bindOpts(id,setter){document.getElementById(id).querySelectorAll('.opt').forEach(o=>o.onclick=()=>{
+  document.getElementById(id).querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));o.classList.add('on');setter(o.dataset.v);runCheck();});}
+bindOpts('posOpts',v=>pos=v);bindOpts('emoOpts',v=>emo=v);
+function runCheck(){
+  if(!pos||!emo)return;
+  const r=document.getElementById('readout');
+  let badge,color,lines=[],quote="";
+  if(pos==='flat'){
+    badge="空仓 · 相对清醒";color="var(--info)";
+    lines.push("你不在场内，偏见较小。但注意：空仓久了容易「等完美买点」而踏空，或过度看空。");
+    quote="空仓者的敌人是自己的耐心与傲慢。—— 有疑就离场，但别用「永远不买」当策略。";
+  }else if(pos==='long'){
+    if(emo==='exc'){badge="多头+兴奋 = 高危";color="var(--up)";
+      lines.push("持仓且兴奋=最易被利润与故事绑定，看不见风险。");
+      lines.push("C5-1 持仓即偏见：你「突然全是利好」，可能是仓位在替你选信息。");
+      lines.push("C8-4 市场里热情毫无用处：心跳加速、非买不可，是警报不是信号。");
+      quote="问自己：如果现在空仓，我还会在这个位置买吗？——答案常是否。";}
+    else if(emo==='fear'){badge="多头+恐惧 = 动摇";color="var(--warn)";
+      lines.push("拿着多单却害怕，说明成本或故事已不稳。");
+      lines.push("C5-2 忘掉仓位：回到「市场的位置」，不是你的盈亏。");
+      quote="恐惧时别急着割，也别硬扛——先看结构：是流动性问题，还是单纯情绪？";}
+    else if(emo==='regret'){badge="多头+懊恼 = 固执风险";color="var(--warn)";
+      lines.push("「想回本再走」常是固执（C8-5），不是分析。");
+      lines.push="";
+      quote="设好退出规则，物理离场几天再复盘，比盯盘自愈更有效。";}
+    else{badge="多头+平静 = 健康";color="var(--down)";
+      lines.push("持仓且平静，是难得的状态。保持，但定期用旁观者视角复核。");
+      quote="C5-8：行情越强越想加，先退一步问「这是第几层周期、群众到哪了」。";}
+  }else{ // short
+    if(emo==='exc'){badge="空头+兴奋 = 危险";color="var(--up)";
+      lines.push("做空赚钱最易滋生傲慢，尤其公开唱空时。");
+      lines.push("C2-7 逆向推理只在顶/底有用；中段硬拗「主力骗我」会被轧。");
+      quote="空头的利润来自耐心，不是来自嘲讽多头。确认流动性拐点再加码。"}
+    else if(emo==='fear'){badge="空头+恐惧 = 被轧";color="var(--warn)";
+      lines.push("做空却怕涨，通常是逆了趋势中段。");
+      lines.push("C8-3 智识乐观：相信能随潮漂浮，而非潮水必顺我。");
+      quote="逆趋势的空，止损要快于顺趋势的多。"}
+    else if(emo==='regret'){badge="空头+懊恼 = 死扛";color="var(--warn)";
+      lines.push("「少赚了很多」的懊恼会让空头变成赌徒。");
+      quote="有疑就离场，拖延的代价小于亏损（C8 戒律③）。"}
+    else{badge="空头+平静 = 健康";color="var(--down)";
+      lines.push("做空且平静，说明有结构依据而非情绪。");
+      quote="C6-9 熊末看流动性拐点；没到那一步，空单也是刀口舔血。"}}
+  r.innerHTML=`<div class="badge" style="background:${color}22;color:${color}">${badge}</div>`+lines.filter(Boolean).map(l=>`<div class="line">• ${l}</div>`).join('')+`<div class="quote">${quote}</div>`;
+}
+
+/* ---- 新闻矩阵 ---- */
+const news={
+  high_good:{t:"高价区 · 利好消息",b:"利好出尽=派发借口。强利好出来股价反跌，常是「这利好早被前面上涨贴现了」，或「他们放利好高位卖」。"},
+  high_bad:{t:"高价区 · 利空消息",b:"高位利空若跌不动，反而显强——说明浮筹轻、承接强。但若利空引发大跌，确认派发完成、趋势转弱。"},
+  high_neu:{t:"高价区 · 中性/模糊",b:"一致看多、全网聊票=情绪温度接近顶部。C2-1 舆论按美元计量：小散必然在顶部多头。"},
+  mid_good:{t:"中段 · 利好消息",b:"利好助推既有趋势，可顺势跟随。C4-5 聪明投机建立在预期上，中段顺势最稳。"},
+  mid_bad:{t:"中段 · 利空消息",b:"利空压制趋势，别硬接飞刀。等结构企稳再评估，而非赌「利空出尽」。"},
+  mid_neu:{t:"中段 · 中性/模糊",b:"无消息时看量能与多空结构（C3-8 技术面真义）：谁在买、谁在卖、动机是什么。"},
+  low_good:{t:"低价区 · 利好消息",b:"低位利好不涨，可能早被贴现或信心未复。别因「出利好」就冲，看价格是否真响应。"},
+  low_bad:{t:"低价区 · 利空消息",b:"利空不跌，警惕底部造假恐慌（C3-6）。一致看空+利空不跌=温度接近底（C5-8）。"},
+  low_neu:{t:"低价区 · 中性/模糊",b:"一致看空、无人聊股=情绪冰点。C6-4 低价本身不足为买因，等流动性拐点回升。"}
+};
+document.querySelectorAll('#matrix .cell').forEach(c=>c.onclick=()=>{
+  document.querySelectorAll('#matrix .cell').forEach(x=>x.classList.remove('show'));c.classList.add('show');
+  const d=news[c.dataset.k];document.getElementById('newsDetail').innerHTML=`<h3>${d.t}</h3><div class="body">${d.b}</div>`;});
+
+/* ---- 五条戒律 ---- */
+const docs=[
+  {no:"①",t:"保持心智清明",x:"不凭耸动信息冲动、不重仓到焦虑、不被仓位带偏。"},
+  {no:"②",t:"信自己或信别人，别混",x:"要么全信自己，要么全信别人。「厨子多了煮坏汤」。"},
+  {no:"③",t:"有疑就离场",x:"拖延的代价小于亏损。不确定时，现金是最好的头寸。"},
+  {no:"④",t:"捕捉情绪趋势",x:"即便暂时逆基本面，硬抗情绪趋势也亏钱。先随波，再谈逆向。"},
+  {no:"⑤",t:"拒绝追过合理高潮",x:"百人九十九的毛病是高位看多、低位看空。不论看起来少赚多少。"},
+  {no:"✶",t:"回到常识",x:"C2-9 / C8：怀疑是工具不是人格。任何事都能正读反读时，先 Stick to common sense。"}
+];
+const docsEl=document.getElementById('docs');
+docs.forEach(d=>{const e=document.createElement('div');e.className='doc';e.innerHTML=`<div class="no">${d.no}</div><div class="t">${d.t}</div><div class="x">${d.x}</div>`;docsEl.appendChild(e);});
+</script>
+</body>
+</html>
